@@ -1,0 +1,14 @@
+{
+  "name": "asclouds-telegram-bot",
+  "version": "1.0.0",
+  "description": "AS Cloud Services Telegram Bot - Access AI, Image Gen, YouTube DL, Clipboard via Telegram",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.66.0"
+  },
+  "author": "AS Cloud System",
+  "license": "MIT"
+}
