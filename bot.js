@@ -239,7 +239,7 @@ _Powered by AS Cloud System_
     parse_mode: "Markdown",
     reply_markup: {
       inline_keyboard: [
-        [{ text: "🌐 Visit AS Cloud", url: "https://shs-cloud.vercel.app" }],
+        [{ text: "🌐 Visit AS Cloud", url: "https://ascloud.vercel.app" }],
       ],
     },
   });
