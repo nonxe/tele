@@ -32,6 +32,9 @@ Welcome! Access all Cloud services right here in Telegram.
 
 *Available Commands:*
 
+🎥 *YouTube Downloader*
+/yt \`<url>\` — Download YouTube videos (HD MP4)
+
 🤖 *AI Chat*
 /ai \`<prompt>\` — Claude 4.5 Haiku (fast)
 /opus \`<prompt>\` — Claude 4.8 Opus (deep reasoning)
@@ -60,6 +63,7 @@ _Powered by AS Cloud System_`,
 
     help: `☁️ *AS Cloud Bot — Help*
 
+🎥 /yt \`url\` — Download YouTube Video (HD MP4)
 🤖 /ai \`prompt\` — Ask Claude Haiku
 🧠 /opus \`prompt\` — Ask Claude Opus
 📸 /insta \`url\` — Download Instagram Reel
@@ -77,6 +81,9 @@ _No limits. No sign-ups. Just use._`,
     langPrompt: "🌐 Choose your language:",
     thinking_haiku: "🤖 _Thinking with Claude 4.5 Haiku..._",
     thinking_opus: "🧠 _Thinking with Claude 4.8 Opus..._",
+    yt_fetching: "🎥 _Fetching YouTube video & direct HD download stream..._",
+    yt_noUrl: "❌ Please provide a YouTube URL.\n\nUsage: `/yt https://www.youtube.com/watch?v=...`",
+    yt_fail: "❌ YouTube download failed",
     insta_fetching: "📸 _Fetching Instagram content..._",
     insta_noUrl: "❌ Please provide an Instagram URL.\n\nUsage: `/insta https://instagram.com/reel/...`",
     insta_fail: "❌ Instagram download failed",
@@ -124,6 +131,9 @@ _No limits. No sign-ups. Just use._`,
 
 *사용 가능한 명령어:*
 
+🎥 *유튜브 다운로더*
+/yt \`<URL>\` — 유튜브 고화질 비디오 다운로드 (HD MP4)
+
 🤖 *AI 채팅*
 /ai \`<질문>\` — Claude 4.5 Haiku (빠른 응답)
 /opus \`<질문>\` — Claude 4.8 Opus (심층 추론)
@@ -152,6 +162,7 @@ _AS Cloud System 제공_`,
 
     help: `☁️ *AS Cloud 봇 — 도움말*
 
+🎥 /yt \`URL\` — 유튜브 비디오 다운로드 (HD MP4)
 🤖 /ai \`질문\` — Claude Haiku에게 질문
 🧠 /opus \`질문\` — Claude Opus에게 질문
 📸 /insta \`URL\` — 인스타그램 릴스 다운로드
@@ -169,6 +180,9 @@ _제한 없음. 가입 없음. 바로 사용._`,
     langPrompt: "🌐 언어를 선택하세요:",
     thinking_haiku: "🤖 _Claude 4.5 Haiku로 생각 중..._",
     thinking_opus: "🧠 _Claude 4.8 Opus로 생각 중..._",
+    yt_fetching: "🎥 _유튜브 비디오 다운로드 스트림 가져오는 중..._",
+    yt_noUrl: "❌ 유튜브 URL을 입력하세요.\n\n사용법: `/yt https://www.youtube.com/watch?v=...`",
+    yt_fail: "❌ 유튜브 다운로드 실패",
     insta_fetching: "📸 _인스타그램 콘텐츠 가져오는 중..._",
     insta_noUrl: "❌ 인스타그램 URL을 입력하세요.\n\n사용법: `/insta https://instagram.com/reel/...`",
     insta_fail: "❌ 인스타그램 다운로드 실패",
@@ -249,6 +263,7 @@ function fetchWithHeaders(url, options = {}) {
         ...options.headers,
       },
     };
+
     const req = mod.request(reqOpts, (res) => {
       let data = "";
       res.on("data", (c) => (data += c));
@@ -263,20 +278,21 @@ function fetchWithHeaders(url, options = {}) {
   });
 }
 
-function githubAPI(method, path, body = null) {
+function githubAPI(method, endpoint, body = null) {
   return new Promise((resolve, reject) => {
-    const options = {
+    const reqOpts = {
       hostname: "api.github.com",
-      path,
-      method,
+      path: endpoint,
+      method: method,
       headers: {
+        "User-Agent": "ASCloud-TeleBot/1.0",
         "Authorization": `token ${GH_PAT}`,
-        "User-Agent": "ASCloud-TeleBot",
         "Accept": "application/vnd.github.v3+json",
         "Content-Type": "application/json",
       },
     };
-    const req = https.request(options, (res) => {
+
+    const req = https.request(reqOpts, (res) => {
       let data = "";
       res.on("data", (c) => (data += c));
       res.on("end", () => {
@@ -394,7 +410,6 @@ async function createShortLink(slug, url, createdBy) {
       try { links = JSON.parse(decoded); if (!Array.isArray(links)) links = []; } catch { links = []; }
     }
 
-    // Check if slug already exists
     if (links.some((l) => l.slug === slug)) {
       return { success: false, error: `Slug "${slug}" already exists.` };
     }
@@ -497,6 +512,90 @@ bot.on("callback_query", (query) => {
   }
 });
 
+// ─── /yt & /ytdl Command (YouTube Downloader) ───────────────────
+
+const YT_REGEX = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/|v\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+
+async function handleYouTubeDownload(chatId, userId, urlArg) {
+  trackUsage(userId, "/yt");
+
+  if (!urlArg || !YT_REGEX.test(urlArg)) {
+    return bot.sendMessage(chatId, t(chatId, "yt_noUrl"), { parse_mode: "Markdown" });
+  }
+
+  const waitMsg = await bot.sendMessage(chatId, t(chatId, "yt_fetching"), { parse_mode: "Markdown" });
+
+  try {
+    const apiUrl = `https://apis.davidcyril.name.ng/download/savetube?url=${encodeURIComponent(urlArg.trim())}`;
+    const data = await fetchJSON(apiUrl);
+
+    if (!data || (!data.success && !data.result && !data.data)) {
+      throw new Error(data?.error || data?.message || "Failed to extract YouTube video download link. Check URL.");
+    }
+
+    const videoData = data.data || data.result || {};
+    const downloadUrl = videoData.download_url || videoData.url || "";
+    const title = videoData.title || "YouTube Video";
+    const quality = videoData.quality
+      ? (String(videoData.quality).toLowerCase().endsWith("p")
+          ? videoData.quality
+          : `${videoData.quality}p`)
+      : "720p";
+    const duration = videoData.duration || "";
+    const cover = videoData.cover || videoData.thumbnail || "";
+
+    if (!downloadUrl) {
+      throw new Error("No download stream URL returned from YouTube API.");
+    }
+
+    await bot.deleteMessage(chatId, waitMsg.message_id).catch(() => {});
+
+    const caption = `🎥 *${title}*\n\n📊 *Quality:* ${quality}${duration ? `\n⏱️ *Duration:* ${duration}` : ""}\n⚡ *Downloaded via @ascloudsbot*`;
+
+    const replyMarkup = {
+      inline_keyboard: [
+        [{ text: `⬇️ Download HD Video (${quality})`, url: downloadUrl }],
+        [{ text: "🌐 Open in AS Cloud", url: "https://ascloud.vercel.app/ytdl" }]
+      ]
+    };
+
+    try {
+      // Attempt sending video directly via Telegram
+      await bot.sendVideo(chatId, downloadUrl, {
+        caption,
+        parse_mode: "Markdown",
+        reply_markup: replyMarkup,
+      });
+    } catch (sendErr) {
+      // Fallback: If video exceeds direct Telegram bot stream limits, send rich card with download button
+      if (cover) {
+        await bot.sendPhoto(chatId, cover, {
+          caption: `${caption}\n\n[⬇️ Click here to Download (${quality})](${downloadUrl})`,
+          parse_mode: "Markdown",
+          reply_markup: replyMarkup,
+        });
+      } else {
+        await bot.sendMessage(chatId, `${caption}\n\n[⬇️ Click here to Download (${quality})](${downloadUrl})`, {
+          parse_mode: "Markdown",
+          disable_web_page_preview: false,
+          reply_markup: replyMarkup,
+        });
+      }
+    }
+  } catch (err) {
+    await bot.editMessageText(`${t(chatId, "yt_fail")}: ${err.message}`, {
+      chat_id: chatId,
+      message_id: waitMsg.message_id,
+    });
+  }
+}
+
+bot.onText(/\/(?:yt|ytdl)(.*)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const urlArg = (match[1] || "").trim();
+  await handleYouTubeDownload(chatId, msg.from.id, urlArg);
+});
+
 // ─── /ai Command (Claude Haiku) ─────────────────────────────────
 
 bot.onText(/\/ai (.+)/, async (msg, match) => {
@@ -577,7 +676,7 @@ bot.onText(/\/insta(.*)/, async (msg, match) => {
     const thumbnail = result.thumbnail || null;
     const title = result.title || result.caption || "Instagram Reel";
 
-    await bot.deleteMessage(chatId, waitMsg.message_id);
+    await bot.deleteMessage(chatId, waitMsg.message_id).catch(() => {});
 
     if (videoUrl) {
       try {
@@ -586,7 +685,6 @@ bot.onText(/\/insta(.*)/, async (msg, match) => {
           parse_mode: "Markdown",
         });
       } catch {
-        // If sending video fails, send as link
         await bot.sendMessage(chatId, `📸 *Instagram Download*\n\n🎬 *${title}*\n\n[⬇️ Download Video](${videoUrl})`, {
           parse_mode: "Markdown",
           disable_web_page_preview: false,
@@ -617,7 +715,6 @@ bot.onText(/\/tempmail/, async (msg) => {
   const waitMsg = await bot.sendMessage(chatId, t(chatId, "tempmail_generating"), { parse_mode: "Markdown" });
 
   try {
-    // 1. Get domains
     const domainRes = await fetchJSON("https://api.mail.tm/domains");
     const activeDomains = domainRes["hydra:member"]?.filter((d) => d.isActive);
     if (!activeDomains || activeDomains.length === 0) throw new Error("No active email domains.");
@@ -631,7 +728,6 @@ bot.onText(/\/tempmail/, async (msg) => {
     let password = "";
     for (let i = 0; i < 12; i++) password += chars[Math.floor(Math.random() * chars.length)];
 
-    // 2. Create account
     const createRes = await fetchWithHeaders("https://api.mail.tm/accounts", {
       method: "POST",
       body: JSON.stringify({ address: email, password }),
@@ -643,7 +739,6 @@ bot.onText(/\/tempmail/, async (msg) => {
 
     const accountId = createRes.data.id;
 
-    // 3. Get token
     const tokenRes = await fetchWithHeaders("https://api.mail.tm/token", {
       method: "POST",
       body: JSON.stringify({ address: email, password }),
@@ -652,7 +747,6 @@ bot.onText(/\/tempmail/, async (msg) => {
     if (tokenRes.status !== 200) throw new Error("Authentication failed.");
     const token = tokenRes.data.token;
 
-    // Save state
     tempMailState[chatId] = { email, password, token, accountId, messages: [] };
 
     await bot.editMessageText(
@@ -702,12 +796,11 @@ bot.onText(/\/inbox/, async (msg) => {
     }
 
     let text = `${t(chatId, "inbox_title")} (${messages.length})\n\n`;
-    messages.forEach((m, i) => {
+    messages.slice(0, 10).forEach((m, i) => {
       const from = m.from?.address || "Unknown";
       const subject = m.subject || "(No subject)";
-      text += `*${i + 1}.* ${t(chatId, "inbox_from")}: ${from}\n   ${t(chatId, "inbox_subject")}: ${subject}\n\n`;
+      text += `*${i + 1}.* ${t(chatId, "inbox_from")}: ${from}\n   ${t(chatId, "inbox_subject")}: ${subject}\n   👉 /readmail ${i + 1}\n\n`;
     });
-    text += `_Use /readmail <number> to read an email._`;
 
     await bot.editMessageText(text, {
       chat_id: chatId,
@@ -729,13 +822,13 @@ bot.onText(/\/readmail(.*)/, async (msg, match) => {
   const numStr = (match[1] || "").trim();
   trackUsage(msg.from.id, "/readmail");
 
-  if (!numStr || isNaN(parseInt(numStr))) {
-    return bot.sendMessage(chatId, t(chatId, "readmail_noNum"), { parse_mode: "Markdown" });
-  }
-
   const state = tempMailState[chatId];
   if (!state || !state.token) {
     return bot.sendMessage(chatId, t(chatId, "tempmail_noAccount"), { parse_mode: "Markdown" });
+  }
+
+  if (!numStr || isNaN(numStr)) {
+    return bot.sendMessage(chatId, t(chatId, "readmail_noNum"), { parse_mode: "Markdown" });
   }
 
   const idx = parseInt(numStr) - 1;
@@ -763,7 +856,6 @@ bot.onText(/\/readmail(.*)/, async (msg, match) => {
     if (date) text += `📅 ${date}\n`;
     text += `\n${body}`;
 
-    // Truncate if too long
     if (text.length > 4000) text = text.substring(0, 3990) + "\n\n_...(truncated)_";
 
     await bot.editMessageText(text, {
@@ -949,15 +1041,55 @@ bot.onText(/\/receive (.+)/, async (msg, match) => {
   }
 });
 
-// ─── Handle unknown commands ────────────────────────────────────
+// ─── Auto-detect URLs sent directly in chat & Handle unknown commands ──
 
-bot.on("message", (msg) => {
-  if (!msg.text || !msg.text.startsWith("/")) return;
-  const knownCmds = ["/start", "/help", "/lang", "/ai", "/opus", "/insta", "/tempmail", "/inbox", "/readmail", "/shorten", "/mylinks", "/send", "/receive"];
-  const cmd = msg.text.split(" ")[0].split("@")[0].toLowerCase();
-  if (knownCmds.includes(cmd)) return;
+bot.on("message", async (msg) => {
+  if (!msg.text) return;
+  const text = msg.text.trim();
+  const chatId = msg.chat.id;
 
-  bot.sendMessage(msg.chat.id, t(msg.chat.id, "unknownCmd"), { parse_mode: "Markdown" });
+  // Auto-detect YouTube links sent without command
+  if (!text.startsWith("/") && YT_REGEX.test(text)) {
+    return handleYouTubeDownload(chatId, msg.from.id, text);
+  }
+
+  // Auto-detect Instagram links sent without command
+  if (!text.startsWith("/") && (text.includes("instagram.com/reel/") || text.includes("instagram.com/p/") || text.includes("instagram.com/tv/"))) {
+    const waitMsg = await bot.sendMessage(chatId, t(chatId, "insta_fetching"), { parse_mode: "Markdown" });
+    try {
+      const apiUrl = `https://apis.davidcyril.name.ng/instagram?url=${encodeURIComponent(text)}`;
+      const data = await fetchJSON(apiUrl);
+      if (data.success && data.result) {
+        const result = data.result;
+        const videoUrl = result.video || result.url || null;
+        const title = result.title || result.caption || "Instagram Reel";
+        await bot.deleteMessage(chatId, waitMsg.message_id).catch(() => {});
+        if (videoUrl) {
+          try {
+            await bot.sendVideo(chatId, videoUrl, {
+              caption: `📸 *Instagram Download*\n\n${title}`,
+              parse_mode: "Markdown",
+            });
+          } catch {
+            await bot.sendMessage(chatId, `📸 *Instagram Download*\n\n🎬 *${title}*\n\n[⬇️ Download Video](${videoUrl})`, {
+              parse_mode: "Markdown",
+              disable_web_page_preview: false,
+            });
+          }
+        }
+        return;
+      }
+    } catch {}
+  }
+
+  // Handle unknown commands
+  if (text.startsWith("/")) {
+    const knownCmds = ["/start", "/help", "/lang", "/yt", "/ytdl", "/ai", "/opus", "/insta", "/tempmail", "/inbox", "/readmail", "/shorten", "/mylinks", "/send", "/receive"];
+    const cmd = text.split(" ")[0].split("@")[0].toLowerCase();
+    if (knownCmds.includes(cmd)) return;
+
+    bot.sendMessage(msg.chat.id, t(msg.chat.id, "unknownCmd"), { parse_mode: "Markdown" });
+  }
 });
 
 // ─── Error handling ─────────────────────────────────────────────
