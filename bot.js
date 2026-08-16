@@ -38,12 +38,15 @@ Welcome! Access all Cloud services right here in Telegram.
 /upload — Send or reply to any file/media with /upload to save to Cloud
 /receive \`<code>\` — Retrieve any Cloud file or clipboard by 7-character code
 
-🤖 *AI Chat*
-/ai \`<prompt>\` — Claude 4.5 Haiku (fast)
-/opus \`<prompt>\` — Claude 4.8 Opus (deep reasoning)
+🎬 *YouTube Downloader*
+/yt \`<url>\` — Download YouTube videos in MP4 HD
 
 📸 *Instagram*
 /insta \`<url>\` — Download Instagram Reels & videos
+
+🤖 *AI Chat*
+/ai \`<prompt>\` — Claude 4.5 Haiku (fast)
+/opus \`<prompt>\` — Claude 4.8 Opus (deep reasoning)
 
 📧 *Temp Mail*
 /tempmail — Generate a temporary email
@@ -67,9 +70,10 @@ _Powered by AS Cloud System_`,
 
 📁 /upload — Upload any file, photo, video, audio or document to Cloud
 📥 /receive \`code\` — Retrieve Cloud file or clipboard by 7-char code
+🎬 /yt \`url\` — Download YouTube HD MP4 video
+📸 /insta \`url\` — Download Instagram Reel
 🤖 /ai \`prompt\` — Ask Claude Haiku
 🧠 /opus \`prompt\` — Ask Claude Opus
-📸 /insta \`url\` — Download Instagram Reel
 📧 /tempmail — Generate temp email
 📬 /inbox — Check inbox
 📖 /readmail \`N\` — Read email #N
@@ -77,12 +81,17 @@ _Powered by AS Cloud System_`,
 📋 /send \`text\` — Clipboard send
 🌐 /lang — Switch language
 
-_No limits. No sign-ups. High speed Cloud._`,
+_No limits. High speed Cloud._`,
 
     langChanged: "✅ Language set to *English*.",
     langPrompt: "🌐 Choose your language:",
     thinking_haiku: "🤖 _Thinking with Claude 4.5 Haiku..._",
     thinking_opus: "🧠 _Thinking with Claude 4.8 Opus..._",
+    yt_fetching: "🎬 _Fetching YouTube video download link..._",
+    yt_noUrl: "❌ Please provide a YouTube video URL.\n\nUsage: `/yt https://youtube.com/watch?v=...`",
+    yt_fail: "❌ YouTube download failed",
+    yt_caption: "🎬 *YouTube Video*\n\n📌 *{TITLE}*\n🎞 *Quality:* {QUALITY}\n⏱ *Duration:* {DURATION}\n\n[⬇️ Direct Download Link]({URL})",
+    yt_btnDownload: "⬇️ Download MP4",
     insta_fetching: "📸 _Fetching Instagram content..._",
     insta_noUrl: "❌ Please provide an Instagram URL.\n\nUsage: `/insta https://instagram.com/reel/...`",
     insta_fail: "❌ Instagram download failed",
@@ -141,12 +150,15 @@ _No limits. No sign-ups. High speed Cloud._`,
 /upload — 파일/미디어와 함께 /upload를 전송하거나 답장하여 클라우드에 저장
 /receive \`<코드>\` — 7자리 코드로 클라우드 파일 또는 클립보드 수신
 
-🤖 *AI 채팅*
-/ai \`<질문>\` — Claude 4.5 Haiku (빠른 응답)
-/opus \`<질문>\` — Claude 4.8 Opus (심층 추론)
+🎬 *유튜브 다운로더*
+/yt \`<URL>\` — 유튜브 고화질 MP4 비디오 다운로드
 
 📸 *인스타그램*
 /insta \`<URL>\` — 인스타그램 릴스 & 영상 다운로드
+
+🤖 *AI 채팅*
+/ai \`<질문>\` — Claude 4.5 Haiku (빠른 응답)
+/opus \`<질문>\` — Claude 4.8 Opus (심층 추론)
 
 📧 *임시 메일*
 /tempmail — 임시 이메일 생성
@@ -170,9 +182,10 @@ _AS Cloud System 제공_`,
 
 📁 /upload — 모든 파일, 사진, 영상, 음성을 클라우드에 업로드
 📥 /receive \`코드\` — 7자리 코드로 파일/클립보드 수신
+🎬 /yt \`URL\` — 유튜브 고화질 MP4 비디오 다운로드
+📸 /insta \`URL\` — 인스타그램 릴스 다운로드
 🤖 /ai \`질문\` — Claude Haiku에게 질문
 🧠 /opus \`질문\` — Claude Opus에게 질문
-📸 /insta \`URL\` — 인스타그램 릴스 다운로드
 📧 /tempmail — 임시 이메일 생성
 📬 /inbox — 받은편지함 확인
 📖 /readmail \`N\` — N번 이메일 읽기
@@ -186,6 +199,11 @@ _제한 없음. 초고속 클라우드._`,
     langPrompt: "🌐 언어를 선택하세요:",
     thinking_haiku: "🤖 _Claude 4.5 Haiku로 생각 중..._",
     thinking_opus: "🧠 _Claude 4.8 Opus로 생각 중..._",
+    yt_fetching: "🎬 _유튜브 비디오 다운로드 링크 가져오는 중..._",
+    yt_noUrl: "❌ 유튜브 비디오 URL을 입력하세요.\n\n사용법: `/yt https://youtube.com/watch?v=...`",
+    yt_fail: "❌ 유튜브 다운로드 실패",
+    yt_caption: "🎬 *유튜브 비디오*\n\n📌 *{TITLE}*\n🎞 *화질:* {QUALITY}\n⏱ *재생 시간:* {DURATION}\n\n[⬇️ 직접 다운로드 링크]({URL})",
+    yt_btnDownload: "⬇️ MP4 다운로드",
     insta_fetching: "📸 _인스타그램 콘텐츠 가져오는 중..._",
     insta_noUrl: "❌ 인스타그램 URL을 입력하세요.\n\n사용법: `/insta https://instagram.com/reel/...`",
     insta_fail: "❌ 인스타그램 다운로드 실패",
@@ -354,7 +372,7 @@ async function trackUsage(userId, command) {
 // ─── Cloud File Storage (Private Channel Sync) ──────────────────
 
 function generate7CharCode(existingCodes = []) {
-  const chars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"; // 32 base32 uppercase unambiguous chars
+  const chars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
   let code = "";
   for (let attempt = 0; attempt < 15; attempt++) {
     code = "";
@@ -390,7 +408,7 @@ async function saveCloudFileRecord(record) {
     const path = `/repos/${TELEDB_REPO}/contents/${TELEDB_FILES_FILE}`;
     const { sha, files } = await fetchCloudFiles();
 
-    const updated = [record, ...files].slice(0, 1000); // keep latest 1000 files
+    const updated = [record, ...files].slice(0, 1000);
 
     const body = {
       message: `Add Cloud file ${record.code}`,
@@ -427,18 +445,15 @@ async function handleCloudUpload(msg, targetMsg) {
   const waitMsg = await bot.sendMessage(chatId, t(chatId, "upload_saving"), { parse_mode: "Markdown" });
 
   try {
-    // Forward / copy message to private cloud channel
     let copiedMsg;
     try {
       copiedMsg = await bot.copyMessage(CLOUD_STORAGE_CHANNEL, fromChatId, messageId);
     } catch (copyErr) {
-      // Fallback to forwardMessage if copyMessage isn't supported for this media type
       copiedMsg = await bot.forwardMessage(CLOUD_STORAGE_CHANNEL, fromChatId, messageId);
     }
 
     const channelMessageId = copiedMsg.message_id;
 
-    // Detect media details
     let mediaType = "message";
     let fileName = null;
     let fileSize = null;
@@ -474,7 +489,6 @@ async function handleCloudUpload(msg, targetMsg) {
 
     const caption = sourceMsg.caption || sourceMsg.text || "";
 
-    // Generate unique 7-character code
     const { files } = await fetchCloudFiles();
     const existingCodes = files.map((f) => (f.code || "").toUpperCase());
     const code = generate7CharCode(existingCodes);
@@ -690,17 +704,14 @@ bot.on("callback_query", (query) => {
 bot.onText(/\/upload(.*)/, async (msg, match) => {
   const chatId = msg.chat.id;
 
-  // Case 1: Replied to a message
   if (msg.reply_to_message) {
     return handleCloudUpload(msg, msg.reply_to_message);
   }
 
-  // Case 2: Attached media directly with /upload command
   if (msg.document || msg.photo || msg.video || msg.audio || msg.voice || msg.video_note || msg.animation || msg.sticker) {
     return handleCloudUpload(msg, msg);
   }
 
-  // Case 3: Empty /upload without attachment or reply
   bot.sendMessage(chatId, t(chatId, "upload_prompt"), { parse_mode: "Markdown" });
 });
 
@@ -718,16 +729,13 @@ bot.onText(/\/receive\s*(.*)/, async (msg, match) => {
   const waitMsg = await bot.sendMessage(chatId, t(chatId, "clipboard_looking"), { parse_mode: "Markdown" });
 
   try {
-    // 1. Check Cloud Files (Private Channel Store)
     const cloudFile = await getCloudFileByCode(code);
     if (cloudFile) {
       await bot.deleteMessage(chatId, waitMsg.message_id);
 
       try {
-        // Fast instant copy directly from Telegram Cloud Storage
         await bot.copyMessage(chatId, cloudFile.channelId, cloudFile.channelMessageId);
       } catch (copyErr) {
-        // Fallback to forward
         await bot.forwardMessage(chatId, cloudFile.channelId, cloudFile.channelMessageId);
       }
 
@@ -737,7 +745,6 @@ bot.onText(/\/receive\s*(.*)/, async (msg, match) => {
       return;
     }
 
-    // 2. Check Cross-Device Clipboard
     const clipItem = await clipboardReceive(code);
     if (clipItem) {
       let responseText = `${t(chatId, "clipboard_received")}\n\n`;
@@ -762,7 +769,6 @@ bot.onText(/\/receive\s*(.*)/, async (msg, match) => {
       return;
     }
 
-    // 3. Not found in either
     await bot.editMessageText(t(chatId, "clipboard_notFound", { CODE: code }), {
       chat_id: chatId,
       message_id: waitMsg.message_id,
@@ -770,6 +776,79 @@ bot.onText(/\/receive\s*(.*)/, async (msg, match) => {
     });
   } catch (err) {
     await bot.editMessageText(`${t(chatId, "error")}: ${err.message}`, {
+      chat_id: chatId,
+      message_id: waitMsg.message_id,
+    });
+  }
+});
+
+// ─── /yt Command (YouTube Downloader with savetube API) ─────────
+
+bot.onText(/\/(?:yt|ytdl)\s*(.*)/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const urlArg = (match[1] || "").trim();
+  trackUsage(msg.from.id, "/yt");
+
+  if (!urlArg || (!urlArg.includes("youtube.com") && !urlArg.includes("youtu.be"))) {
+    return bot.sendMessage(chatId, t(chatId, "yt_noUrl"), { parse_mode: "Markdown" });
+  }
+
+  const waitMsg = await bot.sendMessage(chatId, t(chatId, "yt_fetching"), { parse_mode: "Markdown" });
+
+  try {
+    const apiUrl = `https://apis.davidcyril.name.ng/download/savetube?url=${encodeURIComponent(urlArg)}`;
+    const data = await fetchJSON(apiUrl);
+
+    if (!data.success && !data.result && !data.data) {
+      throw new Error(data.message || data.error || "Failed to download YouTube video.");
+    }
+
+    const videoData = data.data || data.result || {};
+    const title = videoData.title || "YouTube Video";
+    const downloadUrl = videoData.download_url || videoData.url || "";
+    const quality = videoData.quality ? (String(videoData.quality).toLowerCase().endsWith("p") ? videoData.quality : `${videoData.quality}p`) : "720p";
+    const duration = videoData.duration || "HD";
+    const cover = videoData.cover || videoData.thumbnail || "";
+
+    if (!downloadUrl) {
+      throw new Error("Could not extract direct video download URL.");
+    }
+
+    const caption = t(chatId, "yt_caption", {
+      TITLE: title,
+      QUALITY: quality,
+      DURATION: duration,
+      URL: downloadUrl,
+    });
+
+    const replyMarkup = {
+      inline_keyboard: [
+        [{ text: t(chatId, "yt_btnDownload"), url: downloadUrl }],
+      ],
+    };
+
+    await bot.deleteMessage(chatId, waitMsg.message_id);
+
+    if (cover) {
+      try {
+        await bot.sendPhoto(chatId, cover, {
+          caption,
+          parse_mode: "Markdown",
+          reply_markup: replyMarkup,
+        });
+        return;
+      } catch (photoErr) {
+        // Fallback to text message if photo sending fails
+      }
+    }
+
+    await bot.sendMessage(chatId, caption, {
+      parse_mode: "Markdown",
+      disable_web_page_preview: false,
+      reply_markup: replyMarkup,
+    });
+  } catch (err) {
+    await bot.editMessageText(`${t(chatId, "yt_fail")}: ${err.message}`, {
       chat_id: chatId,
       message_id: waitMsg.message_id,
     });
@@ -1178,17 +1257,15 @@ bot.onText(/\/send (.+)/s, async (msg, match) => {
 // ─── Generic Message Listener (Auto upload on media with caption /upload) ──
 
 bot.on("message", async (msg) => {
-  // If user sent a media file with caption starting with /upload
   if (msg.caption && msg.caption.trim().toLowerCase().startsWith("/upload")) {
     return handleCloudUpload(msg, msg);
   }
 
-  // Handle unknown commands
   if (!msg.text || !msg.text.startsWith("/")) return;
   const knownCmds = [
     "/start", "/help", "/lang", "/upload", "/receive", "/get",
-    "/ai", "/opus", "/insta", "/tempmail", "/inbox", "/readmail",
-    "/shorten", "/mylinks", "/send"
+    "/yt", "/ytdl", "/insta", "/ai", "/opus", "/tempmail", "/inbox",
+    "/readmail", "/shorten", "/mylinks", "/send"
   ];
   const cmd = msg.text.split(" ")[0].split("@")[0].toLowerCase();
   if (knownCmds.includes(cmd)) return;
@@ -1210,4 +1287,4 @@ process.on("unhandledRejection", (err) => {
   console.error("Unhandled rejection:", err);
 });
 
-console.log("✅ Bot initialized with Cloud File Forwarding and EN/KO language support. Listening...");
+console.log("✅ Bot initialized with YouTube (/yt), Cloud Storage, and EN/KO language support. Listening...");
