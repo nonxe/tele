@@ -42,9 +42,9 @@ Welcome! Access all Cloud services right here in Telegram.
 📸 *Instagram*
 /insta \`<url>\` — Download Instagram Reels & videos
 
-📧 *Temp Mail*
-/tempmail — Generate a temporary email
-/inbox — Check your inbox
+📧 *Temp Mail (Guerrilla Mail)*
+/tempmail — Generate a temporary disposable email
+/inbox — Check your inbox messages
 /readmail \`<number>\` — Read a specific email
 
 🔗 *Link Shortener*
@@ -67,8 +67,8 @@ _Powered by AS Cloud System_`,
 🤖 /ai \`prompt\` — Ask Claude Haiku
 🧠 /opus \`prompt\` — Ask Claude Opus
 📸 /insta \`url\` — Download Instagram Reel
-📧 /tempmail — Generate temp email
-📬 /inbox — Check inbox
+📧 /tempmail — Generate temp disposable email
+📬 /inbox — Check temp mail inbox
 📖 /readmail \`N\` — Read email #N
 🔗 /shorten \`slug\` \`url\` — Create short link
 📋 /send \`text\` — Clipboard send
@@ -87,20 +87,19 @@ _No limits. No sign-ups. Just use._`,
     insta_fetching: "📸 _Fetching Instagram content..._",
     insta_noUrl: "❌ Please provide an Instagram URL.\n\nUsage: `/insta https://instagram.com/reel/...`",
     insta_fail: "❌ Instagram download failed",
-    tempmail_generating: "📧 _Generating temporary email..._",
-    tempmail_created: "📧 *Temporary Email Created!*",
+    tempmail_generating: "📧 _Generating disposable email address..._",
+    tempmail_created: "📧 *Disposable Email Created!*",
     tempmail_address: "📬 Address",
-    tempmail_password: "🔑 Password",
-    tempmail_tip: "_Emails will arrive here. Use /inbox to check._",
-    tempmail_noAccount: "❌ No temp mail account. Use /tempmail to create one.",
+    tempmail_tip: "_Emails sent to this address will arrive here. Use /inbox to check._",
+    tempmail_noAccount: "❌ No active temp mail session. Use /tempmail to create one.",
     inbox_checking: "📬 _Checking inbox..._",
-    inbox_empty: "📭 *Inbox is empty.*\n\n_New emails will appear here. Use /inbox to refresh._",
+    inbox_empty: "📭 *Inbox is empty.*\n\n_New emails will appear here. Send an email and use /inbox to refresh._",
     inbox_title: "📬 *Inbox*",
     inbox_from: "From",
     inbox_subject: "Subject",
-    readmail_reading: "📖 _Loading email..._",
+    readmail_reading: "📖 _Loading email content..._",
     readmail_noNum: "❌ Please specify email number.\n\nUsage: `/readmail 1`",
-    readmail_notFound: "❌ Email not found. Use /inbox to see available emails.",
+    readmail_notFound: "❌ Email not found. Use /inbox to view available messages.",
     shorten_creating: "🔗 _Creating short link..._",
     shorten_usage: "❌ Usage: `/shorten myslug https://example.com`",
     shorten_success: "🔗 *Link Created!*",
@@ -141,7 +140,7 @@ _No limits. No sign-ups. Just use._`,
 📸 *인스타그램*
 /insta \`<URL>\` — 인스타그램 릴스 & 영상 다운로드
 
-📧 *임시 메일*
+📧 *임시 메일 (Guerrilla Mail)*
 /tempmail — 임시 이메일 생성
 /inbox — 받은편지함 확인
 /readmail \`<번호>\` — 특정 이메일 읽기
@@ -189,15 +188,14 @@ _제한 없음. 가입 없음. 바로 사용._`,
     tempmail_generating: "📧 _임시 이메일 생성 중..._",
     tempmail_created: "📧 *임시 이메일 생성 완료!*",
     tempmail_address: "📬 주소",
-    tempmail_password: "🔑 비밀번호",
     tempmail_tip: "_이메일이 여기로 도착합니다. /inbox로 확인하세요._",
-    tempmail_noAccount: "❌ 임시 메일 계정이 없습니다. /tempmail로 생성하세요.",
+    tempmail_noAccount: "❌ 활성 임시 메일이 없습니다. /tempmail로 생성하세요.",
     inbox_checking: "📬 _받은편지함 확인 중..._",
     inbox_empty: "📭 *받은편지함이 비어있습니다.*\n\n_새 이메일이 여기에 표시됩니다. /inbox로 새로고침하세요._",
     inbox_title: "📬 *받은편지함*",
     inbox_from: "보낸이",
     inbox_subject: "제목",
-    readmail_reading: "📖 _이메일 로딩 중..._",
+    readmail_reading: "📖 _이메일 내용 로딩 중..._",
     readmail_noNum: "❌ 이메일 번호를 지정하세요.\n\n사용법: `/readmail 1`",
     readmail_notFound: "❌ 이메일을 찾을 수 없습니다. /inbox로 확인하세요.",
     shorten_creating: "🔗 _단축 링크 생성 중..._",
@@ -227,6 +225,26 @@ _제한 없음. 가입 없음. 바로 사용._`,
 function t(chatId, key) {
   const lang = userLang[chatId] || "en";
   return LANG[lang][key] || LANG.en[key] || key;
+}
+
+// ─── HTML Stripper ──────────────────────────────────────────────
+
+function stripHtml(html) {
+  if (!html) return "";
+  return html
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<br\s*[\/]?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<\/div>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/\n\s*\n\s*\n/g, "\n\n")
+    .trim();
 }
 
 // ─── Helpers ────────────────────────────────────────────────────
@@ -446,7 +464,7 @@ async function getUserLinks(userId) {
 
 // ─── Temp Mail State ────────────────────────────────────────────
 
-const tempMailState = {}; // chatId -> { email, password, token, accountId, messages }
+const tempMailState = {}; // chatId -> { email, sidToken, messages: [] }
 
 // ─── /start Command ─────────────────────────────────────────────
 
@@ -490,7 +508,9 @@ bot.onText(/\/lang/, (msg) => {
   });
 });
 
-bot.on("callback_query", (query) => {
+// ─── Callback Query (Language & Inbox Refresh) ──────────────────
+
+bot.on("callback_query", async (query) => {
   const chatId = query.message.chat.id;
 
   if (query.data === "lang_en") {
@@ -509,6 +529,58 @@ bot.on("callback_query", (query) => {
       message_id: query.message.message_id,
       parse_mode: "Markdown",
     });
+  } else if (query.data === "check_inbox") {
+    const state = tempMailState[chatId];
+    if (!state || !state.sidToken) {
+      bot.answerCallbackQuery(query.id, { text: "No active temp mail" });
+      return bot.sendMessage(chatId, t(chatId, "tempmail_noAccount"), { parse_mode: "Markdown" });
+    }
+
+    bot.answerCallbackQuery(query.id, { text: "Refreshing inbox..." });
+
+    try {
+      const res = await fetchJSON(`https://api.guerrillamail.com/ajax.php?f=check_email&seq=0&sid_token=${encodeURIComponent(state.sidToken)}`);
+      const messages = (res && Array.isArray(res.list)) ? res.list : [];
+      state.messages = messages;
+
+      if (messages.length === 0) {
+        await bot.editMessageText(
+          `📬 *${state.email}*\n\n${t(chatId, "inbox_empty")}`,
+          {
+            chat_id: chatId,
+            message_id: query.message.message_id,
+            parse_mode: "Markdown",
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: "🔄 Refresh Inbox", callback_data: "check_inbox" }]
+              ]
+            }
+          }
+        );
+        return;
+      }
+
+      let text = `📬 *Inbox for* `${state.email}` (${messages.length})\n\n`;
+      messages.slice(0, 10).forEach((m, i) => {
+        const from = m.mail_from || "Unknown";
+        const subject = m.mail_subject || "(No subject)";
+        const date = m.mail_date || "";
+        text += `*${i + 1}.* ${t(chatId, "inbox_from")}: ${from}\n   ${t(chatId, "inbox_subject")}: *${subject}*${date ? `\n   📅 ${date}` : ""}\n   👉 /readmail ${i + 1}\n\n`;
+      });
+
+      await bot.editMessageText(text, {
+        chat_id: chatId,
+        message_id: query.message.message_id,
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "🔄 Refresh Inbox", callback_data: "check_inbox" }]
+          ]
+        }
+      });
+    } catch (err) {
+      bot.sendMessage(chatId, `${t(chatId, "error")}: ${err.message}`);
+    }
   }
 });
 
@@ -560,14 +632,12 @@ async function handleYouTubeDownload(chatId, userId, urlArg) {
     };
 
     try {
-      // Attempt sending video directly via Telegram
       await bot.sendVideo(chatId, downloadUrl, {
         caption,
         parse_mode: "Markdown",
         reply_markup: replyMarkup,
       });
     } catch (sendErr) {
-      // Fallback: If video exceeds direct Telegram bot stream limits, send rich card with download button
       if (cover) {
         await bot.sendPhoto(chatId, cover, {
           caption: `${caption}\n\n[⬇️ Click here to Download (${quality})](${downloadUrl})`,
@@ -706,7 +776,7 @@ bot.onText(/\/insta(.*)/, async (msg, match) => {
   }
 });
 
-// ─── /tempmail Command ──────────────────────────────────────────
+// ─── /tempmail Command (Guerrilla Mail API) ─────────────────────
 
 bot.onText(/\/tempmail/, async (msg) => {
   const chatId = msg.chat.id;
@@ -715,46 +785,33 @@ bot.onText(/\/tempmail/, async (msg) => {
   const waitMsg = await bot.sendMessage(chatId, t(chatId, "tempmail_generating"), { parse_mode: "Markdown" });
 
   try {
-    const domainRes = await fetchJSON("https://api.mail.tm/domains");
-    const activeDomains = domainRes["hydra:member"]?.filter((d) => d.isActive);
-    if (!activeDomains || activeDomains.length === 0) throw new Error("No active email domains.");
-
-    const domain = activeDomains[0].domain;
-    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-    let username = "cloud_";
-    for (let i = 0; i < 8; i++) username += chars[Math.floor(Math.random() * chars.length)];
-    const email = `${username}@${domain}`;
-
-    let password = "";
-    for (let i = 0; i < 12; i++) password += chars[Math.floor(Math.random() * chars.length)];
-
-    const createRes = await fetchWithHeaders("https://api.mail.tm/accounts", {
-      method: "POST",
-      body: JSON.stringify({ address: email, password }),
-    });
-
-    if (createRes.status !== 201 && createRes.status !== 200) {
-      throw new Error(createRes.data?.message || "Failed to create mail account.");
+    const res = await fetchJSON("https://api.guerrillamail.com/ajax.php?f=get_email_address");
+    if (!res || !res.email_addr || !res.sid_token) {
+      throw new Error("Failed to obtain disposable email from server.");
     }
 
-    const accountId = createRes.data.id;
+    const email = res.email_addr;
+    const sidToken = res.sid_token;
 
-    const tokenRes = await fetchWithHeaders("https://api.mail.tm/token", {
-      method: "POST",
-      body: JSON.stringify({ address: email, password }),
-    });
+    tempMailState[chatId] = { email, sidToken, messages: [] };
 
-    if (tokenRes.status !== 200) throw new Error("Authentication failed.");
-    const token = tokenRes.data.token;
-
-    tempMailState[chatId] = { email, password, token, accountId, messages: [] };
+    const inboxRes = await fetchJSON(`https://api.guerrillamail.com/ajax.php?f=check_email&seq=0&sid_token=${encodeURIComponent(sidToken)}`);
+    if (inboxRes && Array.isArray(inboxRes.list)) {
+      tempMailState[chatId].messages = inboxRes.list;
+    }
 
     await bot.editMessageText(
-      `${t(chatId, "tempmail_created")}\n\n${t(chatId, "tempmail_address")}: \`${email}\`\n${t(chatId, "tempmail_password")}: \`${password}\`\n\n${t(chatId, "tempmail_tip")}`,
+      `${t(chatId, "tempmail_created")}\n\n${t(chatId, "tempmail_address")}: `${email}`\n\n${t(chatId, "tempmail_tip")}`,
       {
         chat_id: chatId,
         message_id: waitMsg.message_id,
         parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "📬 Check Inbox (/inbox)", callback_data: "check_inbox" }],
+            [{ text: "🌐 Open TempMail Web", url: "https://ascloud.vercel.app/tempmail" }]
+          ]
+        }
       }
     );
   } catch (err) {
@@ -772,40 +829,51 @@ bot.onText(/\/inbox/, async (msg) => {
   trackUsage(msg.from.id, "/inbox");
 
   const state = tempMailState[chatId];
-  if (!state || !state.token) {
+  if (!state || !state.sidToken) {
     return bot.sendMessage(chatId, t(chatId, "tempmail_noAccount"), { parse_mode: "Markdown" });
   }
 
   const waitMsg = await bot.sendMessage(chatId, t(chatId, "inbox_checking"), { parse_mode: "Markdown" });
 
   try {
-    const res = await fetchWithHeaders("https://api.mail.tm/messages", {
-      headers: { "Authorization": `Bearer ${state.token}` },
-    });
-
-    const messages = res.data["hydra:member"] || [];
+    const res = await fetchJSON(`https://api.guerrillamail.com/ajax.php?f=check_email&seq=0&sid_token=${encodeURIComponent(state.sidToken)}`);
+    const messages = (res && Array.isArray(res.list)) ? res.list : [];
     state.messages = messages;
 
     if (messages.length === 0) {
-      await bot.editMessageText(t(chatId, "inbox_empty"), {
-        chat_id: chatId,
-        message_id: waitMsg.message_id,
-        parse_mode: "Markdown",
-      });
+      await bot.editMessageText(
+        `📬 *${state.email}*\n\n${t(chatId, "inbox_empty")}`,
+        {
+          chat_id: chatId,
+          message_id: waitMsg.message_id,
+          parse_mode: "Markdown",
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "🔄 Refresh Inbox", callback_data: "check_inbox" }]
+            ]
+          }
+        }
+      );
       return;
     }
 
-    let text = `${t(chatId, "inbox_title")} (${messages.length})\n\n`;
+    let text = `📬 *Inbox for* `${state.email}` (${messages.length})\n\n`;
     messages.slice(0, 10).forEach((m, i) => {
-      const from = m.from?.address || "Unknown";
-      const subject = m.subject || "(No subject)";
-      text += `*${i + 1}.* ${t(chatId, "inbox_from")}: ${from}\n   ${t(chatId, "inbox_subject")}: ${subject}\n   👉 /readmail ${i + 1}\n\n`;
+      const from = m.mail_from || "Unknown";
+      const subject = m.mail_subject || "(No subject)";
+      const date = m.mail_date || "";
+      text += `*${i + 1}.* ${t(chatId, "inbox_from")}: ${from}\n   ${t(chatId, "inbox_subject")}: *${subject}*${date ? `\n   📅 ${date}` : ""}\n   👉 /readmail ${i + 1}\n\n`;
     });
 
     await bot.editMessageText(text, {
       chat_id: chatId,
       message_id: waitMsg.message_id,
       parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "🔄 Refresh Inbox", callback_data: "check_inbox" }]
+        ]
+      }
     });
   } catch (err) {
     await bot.editMessageText(`${t(chatId, "error")}: ${err.message}`, {
@@ -823,7 +891,7 @@ bot.onText(/\/readmail(.*)/, async (msg, match) => {
   trackUsage(msg.from.id, "/readmail");
 
   const state = tempMailState[chatId];
-  if (!state || !state.token) {
+  if (!state || !state.sidToken) {
     return bot.sendMessage(chatId, t(chatId, "tempmail_noAccount"), { parse_mode: "Markdown" });
   }
 
@@ -839,16 +907,16 @@ bot.onText(/\/readmail(.*)/, async (msg, match) => {
   const waitMsg = await bot.sendMessage(chatId, t(chatId, "readmail_reading"), { parse_mode: "Markdown" });
 
   try {
-    const msgId = state.messages[idx].id;
-    const res = await fetchWithHeaders(`https://api.mail.tm/messages/${msgId}`, {
-      headers: { "Authorization": `Bearer ${state.token}` },
-    });
+    const targetMail = state.messages[idx];
+    const mailId = targetMail.mail_id;
 
-    const mail = res.data;
-    const from = mail.from?.address || "Unknown";
-    const subject = mail.subject || "(No subject)";
-    const body = mail.text || mail.intro || "(Empty)";
-    const date = mail.createdAt ? new Date(mail.createdAt).toLocaleString() : "";
+    const res = await fetchJSON(`https://api.guerrillamail.com/ajax.php?f=fetch_email&email_id=${encodeURIComponent(mailId)}&sid_token=${encodeURIComponent(state.sidToken)}`);
+
+    const from = res.mail_from || targetMail.mail_from || "Unknown";
+    const subject = res.mail_subject || targetMail.mail_subject || "(No subject)";
+    const rawBody = res.mail_body || res.mail_excerpt || targetMail.mail_excerpt || "(Empty)";
+    const body = stripHtml(rawBody);
+    const date = res.mail_date || targetMail.mail_date || "";
 
     let text = `📖 *Email #${idx + 1}*\n\n`;
     text += `${t(chatId, "inbox_from")}: ${from}\n`;
@@ -896,7 +964,7 @@ bot.onText(/\/shorten(.*)/, async (msg, match) => {
     if (result.success) {
       const shortUrl = `https://ascloud.vercel.app/${slug}`;
       await bot.editMessageText(
-        `${t(chatId, "shorten_success")}\n\n${t(chatId, "shorten_shortUrl")}: \`${shortUrl}\`\n${t(chatId, "shorten_original")}: ${url}`,
+        `${t(chatId, "shorten_success")}\n\n${t(chatId, "shorten_shortUrl")}: `${shortUrl}`\n${t(chatId, "shorten_original")}: ${url}`,
         {
           chat_id: chatId,
           message_id: waitMsg.message_id,
@@ -973,7 +1041,7 @@ bot.onText(/\/send (.+)/s, async (msg, match) => {
     const result = await clipboardSend(text);
     if (result.success) {
       await bot.editMessageText(
-        `${t(chatId, "clipboard_sent")}\n\n${t(chatId, "clipboard_code")}: \`${result.code}\`\n\n${t(chatId, "clipboard_sentTip")}\n_/receive ${result.code}_`,
+        `${t(chatId, "clipboard_sent")}\n\n${t(chatId, "clipboard_code")}: `${result.code}`\n\n${t(chatId, "clipboard_sentTip")}\n_/receive ${result.code}_`,
         {
           chat_id: chatId,
           message_id: waitMsg.message_id,
@@ -1017,7 +1085,7 @@ bot.onText(/\/receive (.+)/, async (msg, match) => {
     let responseText = `${t(chatId, "clipboard_received")}\n\n`;
     if (item.text) responseText += `${t(chatId, "clipboard_text")}:\n${item.text}\n\n`;
     if (item.mediaUrl) responseText += `${t(chatId, "clipboard_media")}: [Download](${item.mediaUrl})\n\n`;
-    responseText += `_Code: \`${item.code}\` • ${new Date(item.createdAt).toLocaleString()}_`;
+    responseText += `_Code: `${item.code}` • ${new Date(item.createdAt).toLocaleString()}_`;
 
     await bot.editMessageText(responseText, {
       chat_id: chatId,
