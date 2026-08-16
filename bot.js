@@ -829,6 +829,32 @@ bot.onText(/\/(?:yt|ytdl)\s*(.*)/, async (msg, match) => {
 
     await bot.deleteMessage(chatId, waitMsg.message_id);
 
+    const videoCaption = `🎬 *${title}*\n🎞 *Quality:* ${quality} • ⏱ *Duration:* ${duration}`;
+
+    // 1. Try sending as direct streamable video in Telegram
+    try {
+      await bot.sendVideo(chatId, downloadUrl, {
+        caption: videoCaption,
+        parse_mode: "Markdown",
+        supports_streaming: true,
+      });
+      return;
+    } catch (videoErr) {
+      console.warn("Direct sendVideo failed, trying document/link fallback:", videoErr.message);
+    }
+
+    // 2. Try sending as document file
+    try {
+      await bot.sendDocument(chatId, downloadUrl, {
+        caption: videoCaption,
+        parse_mode: "Markdown",
+      });
+      return;
+    } catch (docErr) {
+      console.warn("sendDocument failed:", docErr.message);
+    }
+
+    // 3. Fallback: send cover with interactive download button
     if (cover) {
       try {
         await bot.sendPhoto(chatId, cover, {
@@ -837,9 +863,7 @@ bot.onText(/\/(?:yt|ytdl)\s*(.*)/, async (msg, match) => {
           reply_markup: replyMarkup,
         });
         return;
-      } catch (photoErr) {
-        // Fallback to text message if photo sending fails
-      }
+      } catch (photoErr) {}
     }
 
     await bot.sendMessage(chatId, caption, {
