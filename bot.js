@@ -646,9 +646,9 @@ async function getUserLinks(userId) {
 
 const tempMailState = {}; // chatId -> { email, password, token, accountId, messages }
 
-// Config: Start Menu Video Source (e.g. https://t.me/sourceui/5)
-const START_VIDEO_CHANNEL = process.env.START_VIDEO_CHANNEL || "@sourceui";
-const START_VIDEO_MSG_ID = parseInt(process.env.START_VIDEO_MSG_ID || "5", 10);
+// Config: Start Menu Video Source (https://t.me/c/3909259657/23)
+const START_VIDEO_CHANNEL = process.env.START_VIDEO_CHANNEL || "-1003909259657";
+const START_VIDEO_MSG_ID = parseInt(process.env.START_VIDEO_MSG_ID || "23", 10);
 
 // ─── /start Command ─────────────────────────────────────────────
 
