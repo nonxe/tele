@@ -304,7 +304,7 @@ function githubAPI(method, endpoint, body = null) {
       method: method,
       headers: {
         "User-Agent": "ASCloud-TeleBot/1.0",
-        "Authorization": `token ${GH_PAT}`,
+        "Authorization": "token " + GH_PAT,
         "Accept": "application/vnd.github.v3+json",
         "Content-Type": "application/json",
       },
@@ -328,7 +328,7 @@ function githubAPI(method, endpoint, body = null) {
 async function trackUsage(userId, command) {
   if (!GH_PAT) return;
   try {
-    const path = `/repos/${TELEDB_REPO}/contents/${TELEDB_FILE}`;
+    const path = "/repos/" + TELEDB_REPO + "/contents/" + TELEDB_FILE;
     const res = await githubAPI("GET", path);
     let sha = null;
     let stats = { totalCommands: 0, users: {}, commands: {} };
@@ -347,7 +347,7 @@ async function trackUsage(userId, command) {
     stats.lastUpdated = new Date().toISOString();
 
     const body = {
-      message: `Update stats: ${command} by ${userId}`,
+      message: "Update stats: " + command + " by " + userId,
       content: Buffer.from(JSON.stringify(stats, null, 2)).toString("base64"),
     };
     if (sha) body.sha = sha;
@@ -362,7 +362,7 @@ async function trackUsage(userId, command) {
 async function clipboardSend(text) {
   if (!GH_PAT) return { success: false, error: "GitHub PAT not configured" };
   try {
-    const path = `/repos/${CROSSDEVICE_REPO}/contents/${CROSSDEVICE_FILE}`;
+    const path = "/repos/" + CROSSDEVICE_REPO + "/contents/" + CROSSDEVICE_FILE;
     const res = await githubAPI("GET", path);
     let sha = null;
     let items = [];
@@ -384,14 +384,14 @@ async function clipboardSend(text) {
     items = [newItem, ...items].slice(0, 200);
 
     const body = {
-      message: `Add clipboard item ${code} via Telegram`,
+      message: "Add clipboard item " + code + " via Telegram",
       content: Buffer.from(JSON.stringify(items, null, 2)).toString("base64"),
     };
     if (sha) body.sha = sha;
 
     const putRes = await githubAPI("PUT", path, body);
     if (putRes.status === 200 || putRes.status === 201) return { success: true, code };
-    return { success: false, error: `GitHub API error (${putRes.status})` };
+    return { success: false, error: "GitHub API error (" + putRes.status + ")" };
   } catch (e) {
     return { success: false, error: e.message };
   }
@@ -402,7 +402,7 @@ async function clipboardReceive(code) {
   const cleanCode = code.trim().replace(/\D/g, "");
   if (!cleanCode || cleanCode.length !== 7) return null;
   try {
-    const path = `/repos/${CROSSDEVICE_REPO}/contents/${CROSSDEVICE_FILE}`;
+    const path = "/repos/" + CROSSDEVICE_REPO + "/contents/" + CROSSDEVICE_FILE;
     const res = await githubAPI("GET", path);
     if (res.status !== 200 || !res.data.content) return null;
     const decoded = Buffer.from(res.data.content, "base64").toString("utf-8");
@@ -417,7 +417,7 @@ async function clipboardReceive(code) {
 async function createShortLink(slug, url, createdBy) {
   if (!GH_PAT) return { success: false, error: "GitHub PAT not configured" };
   try {
-    const path = `/repos/${LINKS_REPO}/contents/${LINKS_FILE}`;
+    const path = "/repos/" + LINKS_REPO + "/contents/" + LINKS_FILE;
     const res = await githubAPI("GET", path);
     let sha = null;
     let links = [];
@@ -429,21 +429,21 @@ async function createShortLink(slug, url, createdBy) {
     }
 
     if (links.some((l) => l.slug === slug)) {
-      return { success: false, error: `Slug "${slug}" already exists.` };
+      return { success: false, error: 'Slug "' + slug + '" already exists.' };
     }
 
     const newLink = { slug, url, createdBy, createdAt: new Date().toISOString(), clicks: 0 };
     links.push(newLink);
 
     const body = {
-      message: `Add short link /${slug} via Telegram`,
+      message: "Add short link /" + slug + " via Telegram",
       content: Buffer.from(JSON.stringify(links, null, 2)).toString("base64"),
     };
     if (sha) body.sha = sha;
 
     const putRes = await githubAPI("PUT", path, body);
     if (putRes.status === 200 || putRes.status === 201) return { success: true, link: newLink };
-    return { success: false, error: `GitHub API error (${putRes.status})` };
+    return { success: false, error: "GitHub API error (" + putRes.status + ")" };
   } catch (e) {
     return { success: false, error: e.message };
   }
@@ -452,7 +452,7 @@ async function createShortLink(slug, url, createdBy) {
 async function getUserLinks(userId) {
   if (!GH_PAT) return [];
   try {
-    const path = `/repos/${LINKS_REPO}/contents/${LINKS_FILE}`;
+    const path = "/repos/" + LINKS_REPO + "/contents/" + LINKS_FILE;
     const res = await githubAPI("GET", path);
     if (res.status !== 200 || !res.data.content) return [];
     const decoded = Buffer.from(res.data.content, "base64").toString("utf-8");
@@ -539,13 +539,13 @@ bot.on("callback_query", async (query) => {
     bot.answerCallbackQuery(query.id, { text: "Refreshing inbox..." });
 
     try {
-      const res = await fetchJSON(`https://api.guerrillamail.com/ajax.php?f=check_email&seq=0&sid_token=${encodeURIComponent(state.sidToken)}`);
+      const res = await fetchJSON("https://api.guerrillamail.com/ajax.php?f=check_email&seq=0&sid_token=" + encodeURIComponent(state.sidToken));
       const messages = (res && Array.isArray(res.list)) ? res.list : [];
       state.messages = messages;
 
       if (messages.length === 0) {
         await bot.editMessageText(
-          `📬 *${state.email}*\n\n${t(chatId, "inbox_empty")}`,
+          "📬 *" + state.email + "*\n\n" + t(chatId, "inbox_empty"),
           {
             chat_id: chatId,
             message_id: query.message.message_id,
@@ -560,12 +560,12 @@ bot.on("callback_query", async (query) => {
         return;
       }
 
-      let text = `📬 *Inbox for* `${state.email}` (${messages.length})\n\n`;
+      let text = "📬 *Inbox for* `" + state.email + "` (" + messages.length + ")\n\n";
       messages.slice(0, 10).forEach((m, i) => {
         const from = m.mail_from || "Unknown";
         const subject = m.mail_subject || "(No subject)";
         const date = m.mail_date || "";
-        text += `*${i + 1}.* ${t(chatId, "inbox_from")}: ${from}\n   ${t(chatId, "inbox_subject")}: *${subject}*${date ? `\n   📅 ${date}` : ""}\n   👉 /readmail ${i + 1}\n\n`;
+        text += "*" + (i + 1) + ".* " + t(chatId, "inbox_from") + ": " + from + "\n   " + t(chatId, "inbox_subject") + ": *" + subject + "*" + (date ? "\n   📅 " + date : "") + "\n   👉 /readmail " + (i + 1) + "\n\n";
       });
 
       await bot.editMessageText(text, {
@@ -579,7 +579,7 @@ bot.on("callback_query", async (query) => {
         }
       });
     } catch (err) {
-      bot.sendMessage(chatId, `${t(chatId, "error")}: ${err.message}`);
+      bot.sendMessage(chatId, t(chatId, "error") + ": " + err.message);
     }
   }
 });
@@ -598,7 +598,7 @@ async function handleYouTubeDownload(chatId, userId, urlArg) {
   const waitMsg = await bot.sendMessage(chatId, t(chatId, "yt_fetching"), { parse_mode: "Markdown" });
 
   try {
-    const apiUrl = `https://apis.davidcyril.name.ng/download/savetube?url=${encodeURIComponent(urlArg.trim())}`;
+    const apiUrl = "https://apis.davidcyril.name.ng/download/savetube?url=" + encodeURIComponent(urlArg.trim());
     const data = await fetchJSON(apiUrl);
 
     if (!data || (!data.success && !data.result && !data.data)) {
@@ -611,7 +611,7 @@ async function handleYouTubeDownload(chatId, userId, urlArg) {
     const quality = videoData.quality
       ? (String(videoData.quality).toLowerCase().endsWith("p")
           ? videoData.quality
-          : `${videoData.quality}p`)
+          : videoData.quality + "p")
       : "720p";
     const duration = videoData.duration || "";
     const cover = videoData.cover || videoData.thumbnail || "";
@@ -622,11 +622,11 @@ async function handleYouTubeDownload(chatId, userId, urlArg) {
 
     await bot.deleteMessage(chatId, waitMsg.message_id).catch(() => {});
 
-    const caption = `🎥 *${title}*\n\n📊 *Quality:* ${quality}${duration ? `\n⏱️ *Duration:* ${duration}` : ""}\n⚡ *Downloaded via @ascloudsbot*`;
+    const caption = "🎥 *" + title + "*\n\n📊 *Quality:* " + quality + (duration ? "\n⏱️ *Duration:* " + duration : "") + "\n⚡ *Downloaded via @ascloudsbot*";
 
     const replyMarkup = {
       inline_keyboard: [
-        [{ text: `⬇️ Download HD Video (${quality})`, url: downloadUrl }],
+        [{ text: "⬇️ Download HD Video (" + quality + ")", url: downloadUrl }],
         [{ text: "🌐 Open in AS Cloud", url: "https://ascloud.vercel.app/ytdl" }]
       ]
     };
@@ -640,12 +640,12 @@ async function handleYouTubeDownload(chatId, userId, urlArg) {
     } catch (sendErr) {
       if (cover) {
         await bot.sendPhoto(chatId, cover, {
-          caption: `${caption}\n\n[⬇️ Click here to Download (${quality})](${downloadUrl})`,
+          caption: caption + "\n\n[⬇️ Click here to Download (" + quality + ")](" + downloadUrl + ")",
           parse_mode: "Markdown",
           reply_markup: replyMarkup,
         });
       } else {
-        await bot.sendMessage(chatId, `${caption}\n\n[⬇️ Click here to Download (${quality})](${downloadUrl})`, {
+        await bot.sendMessage(chatId, caption + "\n\n[⬇️ Click here to Download (" + quality + ")](" + downloadUrl + ")", {
           parse_mode: "Markdown",
           disable_web_page_preview: false,
           reply_markup: replyMarkup,
@@ -653,7 +653,7 @@ async function handleYouTubeDownload(chatId, userId, urlArg) {
       }
     }
   } catch (err) {
-    await bot.editMessageText(`${t(chatId, "yt_fail")}: ${err.message}`, {
+    await bot.editMessageText(t(chatId, "yt_fail") + ": " + err.message, {
       chat_id: chatId,
       message_id: waitMsg.message_id,
     });
@@ -676,17 +676,17 @@ bot.onText(/\/ai (.+)/, async (msg, match) => {
   const waitMsg = await bot.sendMessage(chatId, t(chatId, "thinking_haiku"), { parse_mode: "Markdown" });
 
   try {
-    const url = `https://apis.davidcyril.name.ng/ai/claude-haiku-4.5?prompt=${encodeURIComponent(prompt)}`;
+    const url = "https://apis.davidcyril.name.ng/ai/claude-haiku-4.5?prompt=" + encodeURIComponent(prompt);
     const data = await fetchJSON(url);
     const reply = data.data || data.result || data.response || data.message || "No response received.";
 
-    await bot.editMessageText(`🤖 *Claude 4.5 Haiku*\n\n${reply}`, {
+    await bot.editMessageText("🤖 *Claude 4.5 Haiku*\n\n" + reply, {
       chat_id: chatId,
       message_id: waitMsg.message_id,
       parse_mode: "Markdown",
     });
   } catch (err) {
-    await bot.editMessageText(`${t(chatId, "error")}: ${err.message}`, {
+    await bot.editMessageText(t(chatId, "error") + ": " + err.message, {
       chat_id: chatId,
       message_id: waitMsg.message_id,
     });
@@ -703,17 +703,17 @@ bot.onText(/\/opus (.+)/, async (msg, match) => {
   const waitMsg = await bot.sendMessage(chatId, t(chatId, "thinking_opus"), { parse_mode: "Markdown" });
 
   try {
-    const url = `https://apis.davidcyril.name.ng/ai/claude-opus-4.8?prompt=${encodeURIComponent(prompt)}`;
+    const url = "https://apis.davidcyril.name.ng/ai/claude-opus-4.8?prompt=" + encodeURIComponent(prompt);
     const data = await fetchJSON(url);
     const reply = data.data || data.result || data.response || data.message || "No response received.";
 
-    await bot.editMessageText(`🧠 *Claude 4.8 Opus*\n\n${reply}`, {
+    await bot.editMessageText("🧠 *Claude 4.8 Opus*\n\n" + reply, {
       chat_id: chatId,
       message_id: waitMsg.message_id,
       parse_mode: "Markdown",
     });
   } catch (err) {
-    await bot.editMessageText(`${t(chatId, "error")}: ${err.message}`, {
+    await bot.editMessageText(t(chatId, "error") + ": " + err.message, {
       chat_id: chatId,
       message_id: waitMsg.message_id,
     });
@@ -734,7 +734,7 @@ bot.onText(/\/insta(.*)/, async (msg, match) => {
   const waitMsg = await bot.sendMessage(chatId, t(chatId, "insta_fetching"), { parse_mode: "Markdown" });
 
   try {
-    const apiUrl = `https://apis.davidcyril.name.ng/instagram?url=${encodeURIComponent(urlArg)}`;
+    const apiUrl = "https://apis.davidcyril.name.ng/instagram?url=" + encodeURIComponent(urlArg);
     const data = await fetchJSON(apiUrl);
 
     if (!data.success || !data.result) {
@@ -751,25 +751,25 @@ bot.onText(/\/insta(.*)/, async (msg, match) => {
     if (videoUrl) {
       try {
         await bot.sendVideo(chatId, videoUrl, {
-          caption: `📸 *Instagram Download*\n\n${title}`,
+          caption: "📸 *Instagram Download*\n\n" + title,
           parse_mode: "Markdown",
         });
       } catch {
-        await bot.sendMessage(chatId, `📸 *Instagram Download*\n\n🎬 *${title}*\n\n[⬇️ Download Video](${videoUrl})`, {
+        await bot.sendMessage(chatId, "📸 *Instagram Download*\n\n🎬 *" + title + "*\n\n[⬇️ Download Video](" + videoUrl + ")", {
           parse_mode: "Markdown",
           disable_web_page_preview: false,
         });
       }
     } else if (thumbnail) {
       await bot.sendPhoto(chatId, thumbnail, {
-        caption: `📸 *Instagram*\n\n${title}`,
+        caption: "📸 *Instagram*\n\n" + title,
         parse_mode: "Markdown",
       });
     } else {
-      await bot.sendMessage(chatId, `📸 *Instagram*\n\n${title}\n\n_No downloadable media found._`, { parse_mode: "Markdown" });
+      await bot.sendMessage(chatId, "📸 *Instagram*\n\n" + title + "\n\n_No downloadable media found._", { parse_mode: "Markdown" });
     }
   } catch (err) {
-    await bot.editMessageText(`${t(chatId, "insta_fail")}: ${err.message}`, {
+    await bot.editMessageText(t(chatId, "insta_fail") + ": " + err.message, {
       chat_id: chatId,
       message_id: waitMsg.message_id,
     });
@@ -795,13 +795,13 @@ bot.onText(/\/tempmail/, async (msg) => {
 
     tempMailState[chatId] = { email, sidToken, messages: [] };
 
-    const inboxRes = await fetchJSON(`https://api.guerrillamail.com/ajax.php?f=check_email&seq=0&sid_token=${encodeURIComponent(sidToken)}`);
+    const inboxRes = await fetchJSON("https://api.guerrillamail.com/ajax.php?f=check_email&seq=0&sid_token=" + encodeURIComponent(sidToken));
     if (inboxRes && Array.isArray(inboxRes.list)) {
       tempMailState[chatId].messages = inboxRes.list;
     }
 
     await bot.editMessageText(
-      `${t(chatId, "tempmail_created")}\n\n${t(chatId, "tempmail_address")}: `${email}`\n\n${t(chatId, "tempmail_tip")}`,
+      t(chatId, "tempmail_created") + "\n\n" + t(chatId, "tempmail_address") + ": `" + email + "`\n\n" + t(chatId, "tempmail_tip"),
       {
         chat_id: chatId,
         message_id: waitMsg.message_id,
@@ -815,7 +815,7 @@ bot.onText(/\/tempmail/, async (msg) => {
       }
     );
   } catch (err) {
-    await bot.editMessageText(`${t(chatId, "error")}: ${err.message}`, {
+    await bot.editMessageText(t(chatId, "error") + ": " + err.message, {
       chat_id: chatId,
       message_id: waitMsg.message_id,
     });
@@ -836,13 +836,13 @@ bot.onText(/\/inbox/, async (msg) => {
   const waitMsg = await bot.sendMessage(chatId, t(chatId, "inbox_checking"), { parse_mode: "Markdown" });
 
   try {
-    const res = await fetchJSON(`https://api.guerrillamail.com/ajax.php?f=check_email&seq=0&sid_token=${encodeURIComponent(state.sidToken)}`);
+    const res = await fetchJSON("https://api.guerrillamail.com/ajax.php?f=check_email&seq=0&sid_token=" + encodeURIComponent(state.sidToken));
     const messages = (res && Array.isArray(res.list)) ? res.list : [];
     state.messages = messages;
 
     if (messages.length === 0) {
       await bot.editMessageText(
-        `📬 *${state.email}*\n\n${t(chatId, "inbox_empty")}`,
+        "📬 *" + state.email + "*\n\n" + t(chatId, "inbox_empty"),
         {
           chat_id: chatId,
           message_id: waitMsg.message_id,
@@ -857,12 +857,12 @@ bot.onText(/\/inbox/, async (msg) => {
       return;
     }
 
-    let text = `📬 *Inbox for* `${state.email}` (${messages.length})\n\n`;
+    let text = "📬 *Inbox for* `" + state.email + "` (" + messages.length + ")\n\n";
     messages.slice(0, 10).forEach((m, i) => {
       const from = m.mail_from || "Unknown";
       const subject = m.mail_subject || "(No subject)";
       const date = m.mail_date || "";
-      text += `*${i + 1}.* ${t(chatId, "inbox_from")}: ${from}\n   ${t(chatId, "inbox_subject")}: *${subject}*${date ? `\n   📅 ${date}` : ""}\n   👉 /readmail ${i + 1}\n\n`;
+      text += "*" + (i + 1) + ".* " + t(chatId, "inbox_from") + ": " + from + "\n   " + t(chatId, "inbox_subject") + ": *" + subject + "*" + (date ? "\n   📅 " + date : "") + "\n   👉 /readmail " + (i + 1) + "\n\n";
     });
 
     await bot.editMessageText(text, {
@@ -876,7 +876,7 @@ bot.onText(/\/inbox/, async (msg) => {
       }
     });
   } catch (err) {
-    await bot.editMessageText(`${t(chatId, "error")}: ${err.message}`, {
+    await bot.editMessageText(t(chatId, "error") + ": " + err.message, {
       chat_id: chatId,
       message_id: waitMsg.message_id,
     });
@@ -910,7 +910,7 @@ bot.onText(/\/readmail(.*)/, async (msg, match) => {
     const targetMail = state.messages[idx];
     const mailId = targetMail.mail_id;
 
-    const res = await fetchJSON(`https://api.guerrillamail.com/ajax.php?f=fetch_email&email_id=${encodeURIComponent(mailId)}&sid_token=${encodeURIComponent(state.sidToken)}`);
+    const res = await fetchJSON("https://api.guerrillamail.com/ajax.php?f=fetch_email&email_id=" + encodeURIComponent(mailId) + "&sid_token=" + encodeURIComponent(state.sidToken));
 
     const from = res.mail_from || targetMail.mail_from || "Unknown";
     const subject = res.mail_subject || targetMail.mail_subject || "(No subject)";
@@ -918,11 +918,11 @@ bot.onText(/\/readmail(.*)/, async (msg, match) => {
     const body = stripHtml(rawBody);
     const date = res.mail_date || targetMail.mail_date || "";
 
-    let text = `📖 *Email #${idx + 1}*\n\n`;
-    text += `${t(chatId, "inbox_from")}: ${from}\n`;
-    text += `${t(chatId, "inbox_subject")}: *${subject}*\n`;
-    if (date) text += `📅 ${date}\n`;
-    text += `\n${body}`;
+    let text = "📖 *Email #" + (idx + 1) + "*\n\n";
+    text += t(chatId, "inbox_from") + ": " + from + "\n";
+    text += t(chatId, "inbox_subject") + ": *" + subject + "*\n";
+    if (date) text += "📅 " + date + "\n";
+    text += "\n" + body;
 
     if (text.length > 4000) text = text.substring(0, 3990) + "\n\n_...(truncated)_";
 
@@ -932,7 +932,7 @@ bot.onText(/\/readmail(.*)/, async (msg, match) => {
       parse_mode: "Markdown",
     });
   } catch (err) {
-    await bot.editMessageText(`${t(chatId, "error")}: ${err.message}`, {
+    await bot.editMessageText(t(chatId, "error") + ": " + err.message, {
       chat_id: chatId,
       message_id: waitMsg.message_id,
     });
@@ -960,11 +960,11 @@ bot.onText(/\/shorten(.*)/, async (msg, match) => {
   const waitMsg = await bot.sendMessage(chatId, t(chatId, "shorten_creating"), { parse_mode: "Markdown" });
 
   try {
-    const result = await createShortLink(slug, url, `tg_${msg.from.id}`);
+    const result = await createShortLink(slug, url, "tg_" + msg.from.id);
     if (result.success) {
-      const shortUrl = `https://ascloud.vercel.app/${slug}`;
+      const shortUrl = "https://ascloud.vercel.app/" + slug;
       await bot.editMessageText(
-        `${t(chatId, "shorten_success")}\n\n${t(chatId, "shorten_shortUrl")}: `${shortUrl}`\n${t(chatId, "shorten_original")}: ${url}`,
+        t(chatId, "shorten_success") + "\n\n" + t(chatId, "shorten_shortUrl") + ": `" + shortUrl + "`\n" + t(chatId, "shorten_original") + ": " + url,
         {
           chat_id: chatId,
           message_id: waitMsg.message_id,
@@ -973,13 +973,13 @@ bot.onText(/\/shorten(.*)/, async (msg, match) => {
         }
       );
     } else {
-      await bot.editMessageText(`${t(chatId, "error")}: ${result.error}`, {
+      await bot.editMessageText(t(chatId, "error") + ": " + result.error, {
         chat_id: chatId,
         message_id: waitMsg.message_id,
       });
     }
   } catch (err) {
-    await bot.editMessageText(`${t(chatId, "error")}: ${err.message}`, {
+    await bot.editMessageText(t(chatId, "error") + ": " + err.message, {
       chat_id: chatId,
       message_id: waitMsg.message_id,
     });
@@ -995,7 +995,7 @@ bot.onText(/\/mylinks/, async (msg) => {
   const waitMsg = await bot.sendMessage(chatId, t(chatId, "mylinks_loading"), { parse_mode: "Markdown" });
 
   try {
-    const links = await getUserLinks(`tg_${msg.from.id}`);
+    const links = await getUserLinks("tg_" + msg.from.id);
     if (links.length === 0) {
       await bot.editMessageText(t(chatId, "mylinks_empty"), {
         chat_id: chatId,
@@ -1005,9 +1005,9 @@ bot.onText(/\/mylinks/, async (msg) => {
       return;
     }
 
-    let text = `${t(chatId, "mylinks_title")} (${links.length})\n\n`;
+    let text = t(chatId, "mylinks_title") + " (" + links.length + ")\n\n";
     links.forEach((l, i) => {
-      text += `*${i + 1}.* /${l.slug}\n   → ${l.url}\n   📊 ${l.clicks} clicks\n\n`;
+      text += "*" + (i + 1) + ".* /" + l.slug + "\n   → " + l.url + "\n   📊 " + l.clicks + " clicks\n\n";
     });
 
     await bot.editMessageText(text, {
@@ -1017,7 +1017,7 @@ bot.onText(/\/mylinks/, async (msg) => {
       disable_web_page_preview: true,
     });
   } catch (err) {
-    await bot.editMessageText(`${t(chatId, "error")}: ${err.message}`, {
+    await bot.editMessageText(t(chatId, "error") + ": " + err.message, {
       chat_id: chatId,
       message_id: waitMsg.message_id,
     });
@@ -1041,7 +1041,7 @@ bot.onText(/\/send (.+)/s, async (msg, match) => {
     const result = await clipboardSend(text);
     if (result.success) {
       await bot.editMessageText(
-        `${t(chatId, "clipboard_sent")}\n\n${t(chatId, "clipboard_code")}: `${result.code}`\n\n${t(chatId, "clipboard_sentTip")}\n_/receive ${result.code}_`,
+        t(chatId, "clipboard_sent") + "\n\n" + t(chatId, "clipboard_code") + ": `" + result.code + "`\n\n" + t(chatId, "clipboard_sentTip") + "\n_/receive " + result.code + "_",
         {
           chat_id: chatId,
           message_id: waitMsg.message_id,
@@ -1049,13 +1049,13 @@ bot.onText(/\/send (.+)/s, async (msg, match) => {
         }
       );
     } else {
-      await bot.editMessageText(`${t(chatId, "error")}: ${result.error}`, {
+      await bot.editMessageText(t(chatId, "error") + ": " + result.error, {
         chat_id: chatId,
         message_id: waitMsg.message_id,
       });
     }
   } catch (err) {
-    await bot.editMessageText(`${t(chatId, "error")}: ${err.message}`, {
+    await bot.editMessageText(t(chatId, "error") + ": " + err.message, {
       chat_id: chatId,
       message_id: waitMsg.message_id,
     });
@@ -1074,7 +1074,7 @@ bot.onText(/\/receive (.+)/, async (msg, match) => {
   try {
     const item = await clipboardReceive(code);
     if (!item) {
-      await bot.editMessageText(`${t(chatId, "clipboard_notFound")}`, {
+      await bot.editMessageText(t(chatId, "clipboard_notFound"), {
         chat_id: chatId,
         message_id: waitMsg.message_id,
         parse_mode: "Markdown",
@@ -1082,10 +1082,10 @@ bot.onText(/\/receive (.+)/, async (msg, match) => {
       return;
     }
 
-    let responseText = `${t(chatId, "clipboard_received")}\n\n`;
-    if (item.text) responseText += `${t(chatId, "clipboard_text")}:\n${item.text}\n\n`;
-    if (item.mediaUrl) responseText += `${t(chatId, "clipboard_media")}: [Download](${item.mediaUrl})\n\n`;
-    responseText += `_Code: `${item.code}` • ${new Date(item.createdAt).toLocaleString()}_`;
+    let responseText = t(chatId, "clipboard_received") + "\n\n";
+    if (item.text) responseText += t(chatId, "clipboard_text") + ":\n" + item.text + "\n\n";
+    if (item.mediaUrl) responseText += t(chatId, "clipboard_media") + ": [Download](" + item.mediaUrl + ")\n\n";
+    responseText += "_Code: `" + item.code + "` • " + new Date(item.createdAt).toLocaleString() + "_";
 
     await bot.editMessageText(responseText, {
       chat_id: chatId,
@@ -1097,12 +1097,12 @@ bot.onText(/\/receive (.+)/, async (msg, match) => {
     if (item.mediaUrl) {
       try {
         await bot.sendDocument(chatId, item.mediaUrl, {
-          caption: item.fileName ? `📎 ${item.fileName}` : undefined,
+          caption: item.fileName ? "📎 " + item.fileName : undefined,
         });
       } catch {}
     }
   } catch (err) {
-    await bot.editMessageText(`${t(chatId, "error")}: ${err.message}`, {
+    await bot.editMessageText(t(chatId, "error") + ": " + err.message, {
       chat_id: chatId,
       message_id: waitMsg.message_id,
     });
@@ -1125,21 +1125,22 @@ bot.on("message", async (msg) => {
   if (!text.startsWith("/") && (text.includes("instagram.com/reel/") || text.includes("instagram.com/p/") || text.includes("instagram.com/tv/"))) {
     const waitMsg = await bot.sendMessage(chatId, t(chatId, "insta_fetching"), { parse_mode: "Markdown" });
     try {
-      const apiUrl = `https://apis.davidcyril.name.ng/instagram?url=${encodeURIComponent(text)}`;
+      const apiUrl = "https://apis.davidcyril.name.ng/instagram?url=" + encodeURIComponent(text);
       const data = await fetchJSON(apiUrl);
       if (data.success && data.result) {
         const result = data.result;
         const videoUrl = result.video || result.url || null;
+        const thumbnail = result.thumbnail || null;
         const title = result.title || result.caption || "Instagram Reel";
         await bot.deleteMessage(chatId, waitMsg.message_id).catch(() => {});
         if (videoUrl) {
           try {
             await bot.sendVideo(chatId, videoUrl, {
-              caption: `📸 *Instagram Download*\n\n${title}`,
+              caption: "📸 *Instagram Download*\n\n" + title,
               parse_mode: "Markdown",
             });
           } catch {
-            await bot.sendMessage(chatId, `📸 *Instagram Download*\n\n🎬 *${title}*\n\n[⬇️ Download Video](${videoUrl})`, {
+            await bot.sendMessage(chatId, "📸 *Instagram Download*\n\n🎬 *" + title + "*\n\n[⬇️ Download Video](" + videoUrl + ")", {
               parse_mode: "Markdown",
               disable_web_page_preview: false,
             });
