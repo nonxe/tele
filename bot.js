@@ -145,13 +145,13 @@ Welcome! Access all Cloud services right here in Telegram.
     upload_saving: `☁️ ${E.SPIN} <i>Syncing file to Cloud Storage...</i>`,
     upload_success: `☁️ ${E.BRIGHT} <b>Cloud Storage — File Uploaded!</b>`,
     upload_code: "🔑 Access Code",
-    upload_tip: "<i>Use this 7-character code to retrieve this file instantly on any device:</i>\n<code>/receive ",
+    upload_tip: "<i>Use this 7-character code to retrieve this file on any device:</i>\n<code>/receive {CODE}</code>",
     upload_prompt: `ℹ️ ${E.SPARKLE} <b>How to Upload to Cloud:</b>\n\n1. Send any document, photo, video, audio or file with <code>/upload</code> as caption.\n2. Or reply to any message containing media with <code>/upload</code>.\n\nYou will get an instant 7-character access code!`,
     upload_fail: `❌ Failed to save file to Cloud Storage. Please try again.`,
     clipboard_saving: `📋 ${E.SPIN} <i>Saving to clipboard...</i>`,
     clipboard_sent: `📋 ${E.BRIGHT} <b>Clipboard — Sent!</b>`,
     clipboard_code: "🔑 Your code",
-    clipboard_sentTip: "<i>Use this 7-character code on any device to receive your text.</i>",
+    clipboard_sentTip: "<i>Use this 7-character code on any device to receive your text:</i>\n<code>/receive {CODE}</code>",
     clipboard_noText: `❌ Please provide text to send.\n\nUsage: <code>/send Hello World</code>`,
     clipboard_looking: `☁️ ${E.SPIN} <i>Retrieving from Cloud...</i>`,
     clipboard_received: `📋 ${E.BRIGHT} <b>Clipboard — Received!</b>`,
@@ -257,13 +257,13 @@ Welcome! Access all Cloud services right here in Telegram.
     upload_saving: `☁️ ${E.SPIN} <i>클라우드 스토리지에 파일 동기화 중...</i>`,
     upload_success: `☁️ ${E.BRIGHT} <b>클라우드 스토리지 — 파일 업로드 완료!</b>`,
     upload_code: "🔑 접근 코드",
-    upload_tip: "<i>어느 기기나 계정에서든 이 7자리 코드로 즉시 파일을 가져올 수 있습니다:</i>\n<code>/receive ",
+    upload_tip: "<i>어느 기기에서든 이 7자리 코드로 파일을 가져올 수 있습니다:</i>\n<code>/receive {CODE}</code>",
     upload_prompt: `ℹ️ ${E.SPARKLE} <b>클라우드 업로드 방법:</b>\n\n1. 파일, 사진, 영상, 문서 전송 시 캡션에 <code>/upload</code>를 입력하세요.\n2. 또는 이미 보낸 미디어 메시지에 <code>/upload</code>로 답장하세요.\n\n즉시 7자리 접근 코드가 발급됩니다!`,
     upload_fail: `❌ 클라우드 스토리지 저장에 실패했습니다. 다시 시도해 주세요.`,
     clipboard_saving: `📋 ${E.SPIN} <i>클립보드에 저장 중...</i>`,
     clipboard_sent: `📋 ${E.BRIGHT} <b>클립보드 — 전송 완료!</b>`,
     clipboard_code: "🔑 코드",
-    clipboard_sentTip: "<i>이 7자리 코드를 다른 기기에서 사용하여 텍스트를 받으세요.</i>",
+    clipboard_sentTip: "<i>이 7자리 코드를 다른 기기에서 사용하여 텍스트를 받으세요:</i>\n<code>/receive {CODE}</code>",
     clipboard_noText: `❌ 전송할 텍스트를 입력하세요.\n\n사용법: <code>/send 안녕하세요</code>`,
     clipboard_looking: `☁️ ${E.SPIN} <i>클라우드에서 확인 중...</i>`,
     clipboard_received: `📋 ${E.BRIGHT} <b>클립보드 — 수신 완료!</b>`,
@@ -553,7 +553,7 @@ async function handleCloudUpload(msg, targetMsg) {
       throw new Error(saveResult.error || "Failed to save record");
     }
 
-    const replyText = `${t(chatId, "upload_success")}\n\n${t(chatId, "upload_code")}: <code>${code}</code>\n\n${t(chatId, "upload_tip")}<code>${code}</code></i>`;
+    const replyText = `${t(chatId, "upload_success")}\n\n${t(chatId, "upload_code")}: <code>${code}</code>\n\n${t(chatId, "upload_tip", { CODE: code })}`;
 
     await bot.editMessageText(replyText, {
       chat_id: chatId,
@@ -1336,7 +1336,7 @@ bot.onText(/\/send (.+)/s, async (msg, match) => {
     const result = await clipboardSend(text);
     if (result.success) {
       await bot.editMessageText(
-        `${t(chatId, "clipboard_sent")}\n\n${t(chatId, "clipboard_code")}: <code>${result.code}</code>\n\n${t(chatId, "clipboard_sentTip")}\n<i>/receive ${result.code}</i>`,
+        `${t(chatId, "clipboard_sent")}\n\n${t(chatId, "clipboard_code")}: <code>${result.code}</code>\n\n${t(chatId, "clipboard_sentTip", { CODE: result.code })}`,
         {
           chat_id: chatId,
           message_id: waitMsg.message_id,
